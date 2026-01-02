@@ -17,7 +17,8 @@ export const generateToken = (user: AuthUser): string => {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    // FIXED: Type assertion added here to satisfy the overload
+    { expiresIn: JWT_EXPIRES_IN as string }
   );
 };
 
