@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react'; // Added Suspense
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/product/ProductCard';
 import ProductFilters from '@/components/product/ProductFilters';
 import { IProduct } from '@/types';
 import { Loader2, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ProductsPage() {
+// 1. RENAME ORIGINAL COMPONENT TO 'ProductsContent' AND REMOVE 'export default'
+function ProductsContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -281,5 +282,19 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 2. CREATE A WRAPPER COMPONENT THAT USES SUSPENSE
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-gray-500 font-medium">Loading store...</p>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }
