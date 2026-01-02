@@ -102,7 +102,7 @@ export default function CheckoutPage() {
         localStorage.setItem('pendingOrderNumber', order.orderNumber);
         
         // Clear cart before redirecting
-        clearCart();
+        // clearCart();
 
         // Step 4: Redirect to Paystack payment page
         window.location.href = paymentResponse.data.data.authorization_url;
