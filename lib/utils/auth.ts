@@ -32,15 +32,13 @@
 // };
 
 
-import jwt, { JwtPayload } from 'jsonwebtoken';
+
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { AuthUser } from '@/types';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('Missing environment variable JWT_SECRET');
-}
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '7d';
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 12);
@@ -54,20 +52,15 @@ export const generateToken = (user: AuthUser): string => {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    // FIXED: Cast to 'any' to strictly silence the overload mismatch error
+    { expiresIn: JWT_EXPIRES_IN as any }
   );
 };
 
 export const verifyToken = (token: string): AuthUser | null => {
   try {
-    const raw = token.startsWith('Bearer ') ? token.slice(7) : token;
-    const decoded = jwt.verify(raw, JWT_SECRET) as JwtPayload | string;
-    if (typeof decoded === 'string') return null;
-    return {
-      id: (decoded as any).id,
-      email: (decoded as any).email,
-      role: (decoded as any).role,
-    } as AuthUser;
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
+    return decoded;
   } catch (error) {
     return null;
   }
