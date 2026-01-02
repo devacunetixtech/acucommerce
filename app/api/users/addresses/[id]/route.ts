@@ -4,24 +4,34 @@ import User from '@/lib/models/User';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { requireAuth } from '@/lib/middleware/auth';
 
+// 1. Define the correct type for Next.js 15
+type RouteParams = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
 // PUT update address
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams // Use the new type
 ) {
   try {
     const user = requireAuth(request);
     await connectDB();
 
-    const addressData = await request.json();
+    // 2. Await params before accessing properties
+    const { id } = await params;
 
+    const addressData = await request.json();
     const userDoc = await User.findById(user.id);
 
     if (!userDoc) {
       return errorResponse('User not found', 404);
     }
 
-    const address = userDoc.addresses.id(params.id);
+    // Use the unwrapped 'id' here
+    const address = userDoc.addresses.id(id);
 
     if (!address) {
       return errorResponse('Address not found', 404);
@@ -50,11 +60,14 @@ export async function PUT(
 // DELETE address
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams // Use the new type
 ) {
   try {
     const user = requireAuth(request);
     await connectDB();
+
+    // 2. Await params here as well
+    const { id } = await params;
 
     const userDoc = await User.findById(user.id);
 
@@ -62,7 +75,8 @@ export async function DELETE(
       return errorResponse('User not found', 404);
     }
 
-    const address = userDoc.addresses.id(params.id);
+    // Use the unwrapped 'id' here
+    const address = userDoc.addresses.id(id);
 
     if (!address) {
       return errorResponse('Address not found', 404);
@@ -70,8 +84,8 @@ export async function DELETE(
 
     const wasDefault = address.isDefault;
 
-    // Remove address
-    userDoc.addresses.pull(params.id);
+    // Remove address using the unwrapped 'id'
+    userDoc.addresses.pull(id);
 
     // If it was default and there are other addresses, make first one default
     if (wasDefault && userDoc.addresses.length > 0) {
